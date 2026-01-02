@@ -1,0 +1,28 @@
+name: CD 
+
+on:
+  push: 
+    branches: [ "main" ]
+    paths:
+      - backend/**
+      - frontend/**
+      - docker-compose.yaml
+  
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -e
+            cd ~/dev/CodePath
+            git pull
+            docker compose down
+            docker compose up -d --build
