@@ -7,15 +7,15 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'https://volchari.ru',
         changeOrigin: true,
       },
       '/oauth2': {
-        target: 'http://localhost:8080',
+        target: 'https://volchari.ru',
         changeOrigin: true,
       },
       '/login': {
-        target: 'http://localhost:8080',
+        target: 'https://volchari.ru',
         changeOrigin: true,
       },
     },
