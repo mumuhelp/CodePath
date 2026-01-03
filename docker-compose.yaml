@@ -20,7 +20,7 @@ services:
 
   # Backend - Spring Boot API
   backend:
-    build: ./backend
+    build: ./backend/monolite
     container_name: spring_backend
     ports:
       - "8080:8080"
