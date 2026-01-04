@@ -1,18 +1,18 @@
-name: CD 
+name: CD - Deploy Docker Images
 
 on:
   push: 
-    branches: [ "main", "feature/cicd" ]
-    paths:
-      - backend/**
-      - frontend/**
-      - docker-compose.yaml
+    branches: [ "main", "VR-8" ]
   
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Set Git SHA tag
+        id: vars
+        run: echo "SHA_TAG=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+      
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -21,8 +21,13 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            set -e
-            cd ~/dev/CodePath
-            git pull
-            docker compose down
-            docker compose up -d --build
+            SHA_TAG=${{ steps.vars.outputs.SHA_TAG }}
+
+            echo "Logging in to Docker Hub..."
+            echo "${{ secrets.DOCKER_TOKEN }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+
+            sed -i "s/:latest/:$SHA_TAG/g" docker-compose.yml
+
+            docker-compose pull
+
+            docker-compose up -d
