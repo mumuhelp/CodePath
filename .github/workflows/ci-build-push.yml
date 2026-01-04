@@ -81,6 +81,7 @@ jobs:
     uses: ./.github/workflows/cd.yml
     with:
       branch: ${{ github.ref_name }}
+      sha: ${{ github.sha }}
     secrets:
       SSH_HOST: ${{ secrets.SSH_HOST }}
       SSH_PORT: ${{ secrets.SSH_PORT }}
