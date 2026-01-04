@@ -20,6 +20,8 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
+          env:
+            BRANCH: ${{ github.ref_name }}
           script: |
             SHA_TAG=${{ steps.vars.outputs.SHA_TAG }}
             BRANCH=${GITHUB_REF_NAME:-main}
