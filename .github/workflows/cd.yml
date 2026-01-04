@@ -6,6 +6,19 @@ on:
       branch:
         required: true
         type: string
+    secrets:
+      SSH_HOST:
+        required: true
+      SSH_PORT:
+        required: true
+      SSH_USER:
+        required: true
+      SSH_KEY:
+        required: true
+      DOCKER_USERNAME:
+        required: true
+      DOCKER_TOKEN:
+        required: true
   # workflow_run:
   #   workflows: ["CI - Build and Push Docker images"]
   #   branches: [ "main", "VR-8" ]
