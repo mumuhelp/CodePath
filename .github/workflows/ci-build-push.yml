@@ -76,5 +76,9 @@ jobs:
                      ${{ secrets.DOCKER_USERNAME }}/frontend:latest
           docker push ${{ secrets.DOCKER_USERNAME }}/frontend:latest
 
-      
+  deploy:
+    needs: build-and-push
+    uses: ./.github/workflows/cd.yml
+    with:
+      branch: ${{ github.ref_name }}
   
