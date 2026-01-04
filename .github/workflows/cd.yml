@@ -11,27 +11,36 @@ jobs:
     steps:
       - name: Set Git SHA tag
         id: vars
-        run: echo "SHA_TAG=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
-      
+        run: echo "sha_tag=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_SHA: ${{ github.sha }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
         with:
           host: ${{ secrets.SSH_HOST }}
           port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-          env:
-            BRANCH: ${{ github.ref_name }}
           script: |
-            SHA_TAG=${{ steps.vars.outputs.SHA_TAG }}
-            BRANCH=${GITHUB_REF_NAME:-main}
+            SHA_TAG=${{ steps.vars.outputs.sha_tag }}
+            BRANCH=${GITHUB_REF_NAME}
 
-            echo "Logging in to Docker Hub..."
-            echo "${{ secrets.DOCKER_TOKEN }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+            echo "Deploying branch: $BRANCH with SHA: $SHA_TAG"
+
+            echo "${DOCKER_TOKEN}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
 
             cd ~/dev/CodePath
+
             git fetch origin
-            git checkout $BRANCH
+            git checkout -B $BRANCH origin/$BRANCH
             git pull origin $BRANCH
 
             sed -i "s/:latest/:$SHA_TAG/g" docker-compose.yaml
