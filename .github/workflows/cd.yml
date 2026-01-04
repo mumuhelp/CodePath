@@ -1,36 +1,32 @@
 name: CD - Deploy Docker Images
 
 on:
-  push: 
+  workflow_run:
+    workflows: ["CI - Build and Push Docker images"]
     branches: [ "main", "VR-8" ]
+    types:
+      - completed
   
 jobs:
   deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
-      - name: Set Git SHA tag
-        id: vars
-        run: echo "sha_tag=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
-
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         env:
-          GITHUB_REF_NAME: ${{ github.ref_name }}
-          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_SHA: ${{ github.event.workflow_run.head_sha }}
+          DEPLOY_BRANCH: ${{ github.event.workflow_run.head_branch }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_KEY: ${{ secrets.SSH_KEY }}
         with:
           host: ${{ secrets.SSH_HOST }}
           port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            SHA_TAG=${{ steps.vars.outputs.sha_tag }}
+            SHA_TAG=${{ GITHUB_SHA::7 }}
             BRANCH=${GITHUB_REF_NAME}
 
             echo "Deploying branch: $BRANCH with SHA: $SHA_TAG"
