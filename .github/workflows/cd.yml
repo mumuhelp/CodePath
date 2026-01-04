@@ -26,7 +26,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            SHA_TAG=${{ GITHUB_SHA::7 }}
+            SHA_TAG=${GITHUB_SHA::7}
             BRANCH=${GITHUB_REF_NAME}
 
             echo "Deploying branch: $BRANCH with SHA: $SHA_TAG"
