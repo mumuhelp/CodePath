@@ -14,6 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/items")
 @RequiredArgsConstructor
+@SuppressWarnings("PMD.LawOfDemeter")
 public class ItemController {
 
     private final ItemService itemService;

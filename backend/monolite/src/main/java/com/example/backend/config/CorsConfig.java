@@ -18,6 +18,7 @@ public class CorsConfig implements WebMvcConfigurer {
     private String allowedOrigins;
 
     @Override
+    @SuppressWarnings("PMD.LawOfDemeter")
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
                 .allowedOrigins(allowedOrigins.split(","))

@@ -10,6 +10,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("PMD.LawOfDemeter")
 public class ItemService {
 
     private final ItemRepository itemRepository;
