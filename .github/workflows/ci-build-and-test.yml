@@ -3,6 +3,8 @@ name: CI - Build and Test
 on:
   push:
     branches: [ "**" ]
+  pull-request:
+    branches: [ "**" ]
 
 jobs:
   backend-build:
