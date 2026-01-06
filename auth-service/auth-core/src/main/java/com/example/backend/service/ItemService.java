@@ -1,6 +1,6 @@
 package com.example.backend.service;
 
-import com.example.backend.dto.ItemDto;
+import com.example.auth.dto.ItemDTO;
 import com.example.backend.entity.Item;
 import com.example.backend.repository.ItemRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,14 +23,14 @@ public class ItemService {
                 .orElseThrow(() -> new RuntimeException("Item not found with id: " + id));
     }
 
-    public Item createItem(ItemDto itemDto) {
+    public void createItem(ItemDTO itemDto) {
         Item item = new Item();
         item.setName(itemDto.getName());
         item.setDescription(itemDto.getDescription());
-        return itemRepository.save(item);
+        itemRepository.save(item);
     }
 
-    public Item updateItem(Long id, ItemDto itemDto) {
+    public Item updateItem(Long id, ItemDTO itemDto) {
         Item item = getItemById(id);
         item.setName(itemDto.getName());
         item.setDescription(itemDto.getDescription());

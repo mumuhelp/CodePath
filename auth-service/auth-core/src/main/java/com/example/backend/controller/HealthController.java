@@ -1,18 +1,20 @@
 package com.example.backend.controller;
 
+import com.example.auth.api.HealthApi;
+import com.example.auth.dto.HealthStatusDTO;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
-
 @RestController
 @RequestMapping("/api")
-public class HealthController {
+public class HealthController implements HealthApi {
 
-    @GetMapping("/health")
-    public ResponseEntity<Map<String, String>> health() {
-        return ResponseEntity.ok(Map.of("status", "UP", "message", "Backend is running!"));
+    @Override
+    public ResponseEntity<HealthStatusDTO> health() {
+        HealthStatusDTO healthStatusDTO = new HealthStatusDTO();
+        healthStatusDTO.setStatus("OK");
+        healthStatusDTO.setMessage("Backend is running!");
+        return ResponseEntity.ok(healthStatusDTO);
     }
 }

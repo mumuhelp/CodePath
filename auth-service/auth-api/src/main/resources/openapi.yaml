@@ -83,6 +83,20 @@ paths:
         '204':
           description: Успешно удалено
 
+  /api/health:
+    get:
+      tags:
+        - Health
+      summary: Проверка статуса
+      operationId: health
+      responses:
+        "200":
+          description: работает
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatusDTO"
+
 components:
   schemas:
     ItemDTO:
@@ -100,3 +114,12 @@ components:
         createdAt:
           type: string
           format: date-time
+    HealthStatusDTO:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "UP"
+        message:
+          type: string
+          example: "Backend is running!"

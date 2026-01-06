@@ -1,7 +1,10 @@
 package com.example.backend.controller;
 
-import com.example.backend.dto.ItemDto;
+
+import com.example.auth.api.ItemApi;
+import com.example.auth.dto.ItemDTO;
 import com.example.backend.entity.Item;
+import com.example.backend.mapper.ItemMapper;
 import com.example.backend.service.ItemService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,33 +15,39 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/items")
 @RequiredArgsConstructor
-public class ItemController {
+public class ItemController implements ItemApi {
 
     private final ItemService itemService;
+    private final ItemMapper itemMapper;
 
-    @GetMapping
-    public ResponseEntity<List<Item>> getAllItems() {
-        return ResponseEntity.ok(itemService.getAllItems());
+    @Override
+    public ResponseEntity<List<ItemDTO>> getAllItems() {
+        List<Item> items = itemService.getAllItems();
+
+        return ResponseEntity.ok(itemMapper.toDto(items));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Item> getItemById(@PathVariable Long id) {
-        return ResponseEntity.ok(itemService.getItemById(id));
+    @Override
+    public ResponseEntity<ItemDTO> getItemById(@PathVariable Long id) {
+        Item item = itemService.getItemById(id);
+        return ResponseEntity.ok(itemMapper.toDto(item));
     }
 
-    @PostMapping
-    public ResponseEntity<Item> createItem(@Valid @RequestBody ItemDto itemDto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(itemService.createItem(itemDto));
+    @Override
+    public ResponseEntity<ItemDTO> createItem(@Valid @RequestBody ItemDTO itemDto) {
+        Item item = itemMapper.toEntity(itemDto);
+        itemService.createItem(itemDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(itemMapper.toDto(item));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Item> updateItem(@PathVariable Long id, @Valid @RequestBody ItemDto itemDto) {
-        return ResponseEntity.ok(itemService.updateItem(id, itemDto));
+    @Override
+    public ResponseEntity<ItemDTO> updateItem(@PathVariable Long id, @Valid @RequestBody ItemDTO itemDto) {
+        Item item= itemService.updateItem(id, itemDto);
+        return ResponseEntity.ok(itemMapper.toDto(item));
     }
 
-    @DeleteMapping("/{id}")
+    @Override
     public ResponseEntity<Void> deleteItem(@PathVariable Long id) {
         itemService.deleteItem(id);
         return ResponseEntity.noContent().build();
