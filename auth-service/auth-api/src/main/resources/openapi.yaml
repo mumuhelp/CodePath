@@ -1,0 +1,102 @@
+openapi: 3.0.3
+info:
+  title: Auth Service API
+  version: 1.0.0
+paths:
+  /api/items:
+    get:
+      operationId: getAllItems
+      summary: получение всех сущностей
+      tags:
+        [Item]
+      responses:
+        "200":
+          description: Успех
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ItemDTO'
+    post:
+      tags:
+        [Item]
+      summary: Создать новый предмет
+      operationId: createItem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemDTO"
+      responses:
+        '201':
+              description: Предмет создан
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/ItemDTO"
+  /api/items/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    get:
+      tags:
+        - Item
+      summary: Получить по ID
+      operationId: getItemById
+      responses:
+        '200':
+          description: Найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemDTO'
+    put:
+      tags:
+        - Item
+      summary: Обновить предмет
+      operationId: updateItem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ItemDTO'
+      responses:
+        '200':
+          description: Обновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemDTO'
+    delete:
+      tags:
+        - Item
+      summary: Удалить предмет
+      operationId: deleteItem
+      responses:
+        '204':
+          description: Успешно удалено
+
+components:
+  schemas:
+    ItemDTO:
+      type: object
+      required:
+        [name]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+            type: string
+        description:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
