@@ -57,11 +57,15 @@ jobs:
       
       - name: Deploy via SSH
         uses: appleboy/ssh-action@029f5b4aeeeb58fdfe1410a5d17f967dacf36262
+        env:
+          SHA_TAG_FULL: ${{ github.sha }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         with:
           host: ${{ secrets.SSH_HOST }}
           port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }} 
+          envs: SHA_TAG_FULL,DOCKERHUB_USERNAME
           script: |
             SHA_TAG=$(echo "$SHA_TAG_FULL" | cut -c1-7)
             echo "Pulling backend images with SHA: $SHA_TAG"
@@ -85,6 +89,3 @@ jobs:
             git pull
             echo "SHA_TAG=$SHA_TAG" >> .env
             docker compose up -d
-        env:
-          SHA_TAG_FULL: ${{ github.sha }}
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
