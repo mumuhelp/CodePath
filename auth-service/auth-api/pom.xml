@@ -36,6 +36,13 @@
             <artifactId>jackson-databind-nullable</artifactId>
             <version>0.2.6</version>
         </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.30</version>
+            <scope>provided</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -63,13 +70,18 @@
                             </importMappings>
 
                             <configOptions>
+                                <generatedConstructorWithRequiredArgs>false</generatedConstructorWithRequiredArgs>
                                 <basePackage>com.example.auth</basePackage>
                                 <apiPackage>com.example.auth.api</apiPackage>
                                 <modelPackage>com.example.auth.dto</modelPackage>
-                                <interfaceOnly>true</interfaceOnly>
+                                <interfaceOnly>false</interfaceOnly>
                                 <skipDefaultInterface>true</skipDefaultInterface>
                                 <useSpringBoot3>true</useSpringBoot3>
                                 <useTags>true</useTags>
+                                <useFeignClient>true</useFeignClient>
+                                <unhandledException>true</unhandledException>
+                                <skipDefaultInterface>true</skipDefaultInterface>
+                                <additionalModelTypeAnnotations>@lombok.Data @lombok.Builder @lombok.NoArgsConstructor @lombok.AllArgsConstructor</additionalModelTypeAnnotations>
                             </configOptions>
                         </configuration>
                     </execution>

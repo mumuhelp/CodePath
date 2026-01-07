@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Auth Service API
+  title: Auth-Service
   version: 1.0.0
 paths:
   /api/items:
@@ -123,3 +123,22 @@ components:
         message:
           type: string
           example: "Backend is running!"
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: время возникновения ошибки
+        status:
+          type: integer
+          description: HTTP код ошибки
+        error:
+          type: string
+          description: тип ошибки
+        message:
+          type: string
+          description: Подробнее сообщение
+        path:
+          type: string
+          description: Путь запроса
