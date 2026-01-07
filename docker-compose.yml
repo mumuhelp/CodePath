@@ -19,7 +19,7 @@ services:
       retries: 5
 
   monolite:
-    image: monolite:latest
+    image: ${DOCKER_USERNAME}/monolite:${SHA_TAG:-latest}
     build: 
       context: .
       dockerfile: ./backend/monolite/Dockerfile
@@ -39,7 +39,7 @@ services:
         condition: service_healthy
 
   frontend:
-    image: frontend:latest
+    image: ${DOCKER_USERNAME}/frontend:${SHA_TAG:-latest}
     build: ./frontend
     container_name: react_frontend
     ports:

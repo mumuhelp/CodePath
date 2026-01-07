@@ -49,7 +49,7 @@ function App() {
         body: JSON.stringify({ name, description }),
       })
       
-      if (!response.ok) throw new Error('Failed to create item')
+      if (response.status !== 201) throw new Error('Failed to create item')
       
       setName('')
       setDescription('')

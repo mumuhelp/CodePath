@@ -1,4 +1,5 @@
-name: CD - Build and Push
+name: CD - Build and Deploy
+
 on:
   push:
     branches: [ "main" ]
@@ -49,3 +50,36 @@ jobs:
           echo "Pushing frontend image: $IMAGE_SHA and $IMAGE_LATEST"
           docker push $IMAGE_SHA
           docker push $IMAGE_LATEST
+      
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }} 
+          script: |
+            SHA_TAG=$(echo "$SHA_TAG_FULL" | cut -c1-7)
+            echo "Pulling backend images with SHA: $SHA_TAG"
+
+            BACKEND_SERVICES=$(ls backend | grep -d / . || true)
+            for SERVICE in $BACKEND_SERVICES; do
+              IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/$SERVICE:$SHA_TAG"
+              echo "Pulling $IMAGE"
+              docker pull $IMAGE
+            done
+
+            FRONTEND_IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/frontend:$SHA_TAG"
+            echo "Pulling frontend image: $FRONTEND_IMAGE"
+            docker pull $FRONTEND_IMAGE
+
+            echo "Starting docker-compose"
+            cd ~/dev/CodePath
+            git fetch origin
+            git checkout main
+            git reset --hard HEAD
+            git pull
+            echo "SHA_TAG=$SHA_TAG" >> .env
+            docker compose up -d
+        env:
+          SHA_TAG_FULL: ${{ github.sha }}
