@@ -231,7 +231,7 @@
                                     </limits>
                                 </rule>
                             </rules>
-                        <failOnViolation>false</failOnViolation>
+                        <failOnViolation>true</failOnViolation>
                         </configuration>
                     </execution>
                 </executions>
