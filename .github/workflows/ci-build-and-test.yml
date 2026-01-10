@@ -51,6 +51,32 @@ jobs:
           name: jacoco-reports
           path: jacoco-reports
 
+      - name: SonarCloud Scan
+        env:
+          SONAR_ORG_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
+          SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          JACOCO_PATHS=$(find backend -name jacoco.xml | paste -sd "," -)
+          mvn sonar:sonar \
+            -Dsonar.organization=$SONAR_PROJECT_KEY \
+            -Dsonar.projectKey=$secrets.SONAR_PROJECT_KEY \
+            -Dsonar.login=$SONAR_TOKEN \
+            -Dsonar.coverage.jacoco.xmlReportPaths=$JACOCO_PATHS
+
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9
+        env:
+          SONAR_ORG_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
+          SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.organization=${{ secrets.SONAR_PROJECT_KEY }}
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+            -Dsonar.coverage.jacoco.xmlReportPaths=$(find backend -name jacoco.xml | paste -sd "," -)
 
   frontend-build:
     runs-on: ubuntu-latest

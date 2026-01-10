@@ -33,6 +33,19 @@
         <fb-contrib.version>7.7.2</fb-contrib.version>
         <findsecbugs-plugin.version>1.14.0</findsecbugs-plugin.version>
         <jacoco.version>0.8.14</jacoco.version>
+        <sonar-maven-plugin.version>5.3.0.6276</sonar-maven-plugin.version>
+
+        <sonar.organization>mumuhelp</sonar.organization>
+        <sonar.projectKey>mumuhelp_CodePath</sonar.projectKey>
+        <sonar.sourceEncoding>UTF-8</sonar.sourceEncoding>
+        <sonar.scm.disabled>false</sonar.scm.disabled>
+        <sonar.coverage.jacoco.xmlReportPaths>
+            target/site/jacoco/jacoco.xml
+        </sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.pmd.reportPaths>target/pmd.xml</sonar.pmd.reportPaths>
+        <sonar.checkstyle.reportPaths>
+            target/checkstyle-result.xml
+        </sonar.checkstyle.reportPaths>
     </properties>
 
     <dependencies>
@@ -235,6 +248,12 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.sonarsource.scanner.maven</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+                <version>${sonar-maven-plugin.version}</version>
             </plugin>
         </plugins>
     </build>
