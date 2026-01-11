@@ -1,16 +1,17 @@
+version: '3.8'
+
 services:
   db:
-    image: postgres
+    image: postgres:15-alpine
     container_name: postgres_db
     environment:
       POSTGRES_DB: appdb
       POSTGRES_USER: appuser
       POSTGRES_PASSWORD: mysecretpassword
-      
     expose:
       - "5432"
     volumes:
-      - postgres_data:/var/lib/postgresql
+      - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U appuser -d appdb"]
@@ -18,13 +19,13 @@ services:
       timeout: 5s
       retries: 5
 
-  monolite:
-    image: ${DOCKER_USERNAME}/monolite:${SHA_TAG:-latest}
+  auth-service:
+    image: ${DOCKER_USERNAME}/auth-service:${SHA_TAG}
     build: 
       context: .
-      dockerfile: ./backend/monolite/Dockerfile
+      dockerfile: ./backend/auth-service/Dockerfile
       args:
-        SERVICE_NAME: monolite
+        SERVICE_NAME: auth-service
     container_name: spring_backend
     ports:
       - "8080:8080"
@@ -33,20 +34,23 @@ services:
       SPRING_DATASOURCE_USERNAME: appuser
       SPRING_DATASOURCE_PASSWORD: mysecretpassword
       FRONTEND_URL: http://localhost:3000
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
     restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
 
   frontend:
-    image: ${DOCKER_USERNAME}/frontend:${SHA_TAG:-latest}
-    build: ./frontend
+    image: ${DOCKER_USERNAME}/frontend:${SHA_TAG}
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
     container_name: react_frontend
     ports:
       - "3000:3000"
     restart: unless-stopped
     depends_on:
-      - monolite
+      - auth-service
 
 volumes:
   postgres_data:

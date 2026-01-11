@@ -1,0 +1,148 @@
+openapi: 3.0.3
+info:
+  title: Auth-Service
+  version: 1.0.0
+paths:
+  /api/items:
+    get:
+      operationId: getAllItems
+      summary: получение всех сущностей
+      tags:
+        [Item]
+      responses:
+        "200":
+          description: Успех
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ItemDTO'
+    post:
+      tags:
+        [Item]
+      summary: Создать новый предмет
+      operationId: createItem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemDTO"
+      responses:
+        '201':
+              description: Предмет создан
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/ItemDTO"
+  /api/items/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    get:
+      tags:
+        - Item
+      summary: Получить по ID
+      operationId: getItemById
+      responses:
+        '200':
+          description: Найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemDTO'
+    put:
+      tags:
+        - Item
+      summary: Обновить предмет
+      operationId: updateItem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ItemDTO'
+      responses:
+        '200':
+          description: Обновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemDTO'
+    delete:
+      tags:
+        - Item
+      summary: Удалить предмет
+      operationId: deleteItem
+      responses:
+        '204':
+          description: Успешно удалено
+
+  /api/health:
+    get:
+      tags:
+        - Health
+      summary: Проверка статуса
+      operationId: health
+      responses:
+        "200":
+          description: работает
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatusDTO"
+
+components:
+  schemas:
+    ItemDTO:
+      type: object
+      required:
+        [name]
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 3
+          maximum: 10
+        name:
+            type: string
+            minLength: 3
+            maxLength: 6
+        description:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+    HealthStatusDTO:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "UP"
+        message:
+          type: string
+          example: "Backend is running!"
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: время возникновения ошибки
+        status:
+          type: integer
+          description: HTTP код ошибки
+        error:
+          type: string
+          description: тип ошибки
+        message:
+          type: string
+          description: Подробнее сообщение
+        path:
+          type: string
+          description: Путь запроса
