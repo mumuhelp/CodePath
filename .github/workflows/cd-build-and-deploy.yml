@@ -1,0 +1,150 @@
+name: CD - Build and Deploy
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-push-backend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+      
+      - name: Build and push backend images
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        run: |
+          SHA_TAG=${GITHUB_SHA::7}
+          BACKEND_SERVICES=$(find backend -mindepth 1 -maxdepth 1 -type d -exec test -f '{}/Dockerfile' \; -print)
+
+          for SERVICE in $BACKEND_SERVICES; do
+            SERVICE_NAME=$(basename "$SERVICE")
+            IMAGE_SHA=$DOCKER_USERNAME/$SERVICE_NAME:$SHA_TAG
+            IMAGE_LATEST=$DOCKER_USERNAME/$SERVICE_NAME:latest
+
+            echo "Building backend service image: $SERVICE_NAME"
+            docker build \
+              --build-arg SERVICE_NAME=$SERVICE_NAME \
+              -f backend/$SERVICE_NAME/Dockerfile -t $IMAGE_SHA -t $IMAGE_LATEST .
+
+            echo "Pushing backend service image: $IMAGE_SHA and $IMAGE_LATEST"
+            docker push $IMAGE_SHA
+            docker push $IMAGE_LATEST
+          done
+
+      - name: Build and push frontend image
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        run: |
+          SHA_TAG=${GITHUB_SHA::7}
+          IMAGE_SHA=$DOCKER_USERNAME/frontend:$SHA_TAG
+          IMAGE_LATEST=$DOCKER_USERNAME/frontend:latest
+
+          echo "Building frontend image"
+          docker build -f ./frontend/Dockerfile -t $IMAGE_SHA -t $IMAGE_LATEST frontend
+
+          echo "Pushing frontend image: $IMAGE_SHA and $IMAGE_LATEST"
+          docker push $IMAGE_SHA
+          docker push $IMAGE_LATEST
+      
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@029f5b4aeeeb58fdfe1410a5d17f967dacf36262
+        env:
+          SHA_TAG_FULL: ${{ github.sha }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }} 
+          envs: SHA_TAG_FULL,DOCKERHUB_USERNAME
+          script: |
+            SHA_TAG=$(echo "$SHA_TAG_FULL" | cut -c1-7)
+            echo "Pulling backend images with SHA: $SHA_TAG"
+
+            BACKEND_SERVICES=$(ls backend | grep -d / . || true)
+            for SERVICE in $BACKEND_SERVICES; do
+              IMAGE="$DOCKERHUB_USERNAME/$SERVICE:$SHA_TAG"
+              echo "Pulling $IMAGE"
+              docker pull $IMAGE
+            done
+
+            FRONTEND_IMAGE="$DOCKERHUB_USERNAME/frontend:$SHA_TAG"
+            echo "Pulling frontend image: $FRONTEND_IMAGE"
+            docker pull $FRONTEND_IMAGE
+
+            echo "Starting docker-compose"
+            cd ~/dev/CodePath
+            git fetch origin
+            git checkout main
+            git reset --hard origin/main
+            echo "SHA_TAG=$SHA_TAG" >> .env
+            docker compose up -d
+
+            echo "Removing stopped containers"
+            docker container prune -f
+
+            echo "Rolling cleanup images (keep last $KEEP_LAST)"
+            IMAGES=$(docker images "$DOCKERHUB_USERNAME/*" --format "{{.Repository}}:{{.Tag}} {{.CreatedAt}}" \
+              | grep -E ":[a-f0-9]{7}$" \
+              | sort -rk2 \
+              | awk '{print $1}')
+
+            COUNT=0
+            for IMAGE in $IMAGES; do
+              COUNT=$((COUNT+1))
+              if [ $COUNT -le $KEEP_LAST ]; then
+                continue
+              fi
+              echo "Removing image $IMAGE"
+              docker rmi -f $IMAGE || true
+            done
+
+      - name: Rolling cleanup Docker Hub
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+        run: |
+          KEEP_LAST=5
+
+          get_tags() {
+            curl -s -u "$DOCKER_USERNAME:$DOCKER_TOKEN" \
+              "https://hub.docker.com/v2/repositories/$DOCKER_USERNAME/$1/tags?page_size=100"
+          }
+
+          delete_tag() {
+            curl -s -X DELETE -u "$DOCKER_USERNAME:$DOCKER_TOKEN" \
+              "https://hub.docker.com/v2/repositories/$DOCKER_USERNAME/$1/tags/$2/"
+          }
+
+          SERVICES=$(ls backend)
+          SERVICES="$SERVICES frontend"
+
+          for SERVICE in $SERVICES; do
+            echo "Cleaning Docker Hub repo: $SERVICE"
+
+            TAGS=$(get_tags $SERVICE | jq -r '
+              .results[]
+              | select(.name != "latest")
+              | select(.name | test("^[a-f0-9]{7}$"))
+              | .name
+            ') || TAGS=""
+
+            COUNT=0
+            for TAG in $TAGS; do
+              COUNT=$((COUNT+1))
+              if [ $COUNT -le $KEEP_LAST ]; then
+                continue
+              fi
+              echo "Deleting $SERVICE:$TAG"
+              delete_tag $SERVICE $TAG
+            done
+          done
